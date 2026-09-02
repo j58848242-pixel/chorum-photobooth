@@ -523,8 +523,8 @@ async function generateQRCode(compressedBase64) {
         const result = await response.json();
 
         if (result.success) {
-            const imgId = result.data.id; // Ambil ID unik gambar, BUKAN direct link yang bikin blank
-            const viewerUrl = `${BASE_WEB_URL}view.html?id=${imgId}`; // Rute ke web kita sendiri
+            const imgUrl = result.data.display_url; // Ambil URL gambar langsung dari ImgBB
+            const viewerUrl = `${BASE_WEB_URL}view.html?url=${encodeURIComponent(imgUrl)}`; // Rute ke web dengan parameter URL
             
             // Konversi URL Web Viewer menjadi QR Code
             const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}`;
