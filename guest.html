@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CHORUM Photobooth</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/guest.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <section id="step-frame" class="step-section active">
+            <div class="header text-center adjust-header" style="margin-top: 20px;">
+                <h2 style="color: var(--accent-color);">Pilih Frame</h2>
+                <p>Pilih desain CHORUM favorit lu!</p>
+            </div>
+            
+            <div class="frame-carousel">
+                <button class="nav-btn" id="btnPrevFrame">&lt;</button>
+                <div class="frame-preview-wrapper glass-panel">
+                    <img id="framePreview" src="" alt="Frame Preview">
+                    <div class="frame-badge" id="frameNameDisplay">Memuat Frame...</div>
+                </div>
+                <button class="nav-btn" id="btnNextFrame">&gt;</button>
+            </div>
+
+            <button class="btn-primary" id="btnConfirmFrame" style="margin-top: auto; margin-bottom: 20px;">Gunakan Frame Ini</button>
+        </section>
+
+        <section id="step-camera" class="step-section">
+            <div class="header text-center adjust-header" style="margin-top: 10px; margin-bottom: 10px;">
+                <h2>Waktunya Aksi</h2>
+                <p id="captureHelperText">Pose terbaikmu! (0/3)</p>
+            </div>
+
+            <div class="timer-controls glass-panel">
+                <button class="timer-btn active" data-time="0">⚡ Off</button>
+                <button class="timer-btn" data-time="3">3s</button>
+                <button class="timer-btn" data-time="5">5s</button>
+                <button class="timer-btn" data-time="10">10s</button>
+            </div>
+
+            <div class="camera-wrapper" style="margin-top: 10px; margin-bottom: 10px;">
+                <video id="cameraStream" autoplay playsinline></video>
+                <div id="countdownOverlay" class="countdown-overlay" style="display: none;">3</div>
+                
+                <div class="camera-reticle top-left"></div>
+                <div class="camera-reticle top-right"></div>
+                <div class="camera-reticle bottom-left"></div>
+                <div class="camera-reticle bottom-right"></div>
+            </div>
+            
+            <div class="filter-controls" id="filterControls">
+                <button class="filter-btn active" data-filter="none">Normal</button>
+                <button class="filter-btn" data-filter="grayscale(100%)">B&W</button>
+                <button class="filter-btn" data-filter="sepia(100%)">Sepia</button>
+                <button class="filter-btn" data-filter="sepia(40%) contrast(120%) saturate(120%)">Vintage</button>
+                <button class="filter-btn" data-filter="brightness(110%) blur(0.5px) contrast(90%)">Soft</button>
+                <button class="filter-btn" data-filter="contrast(150%) grayscale(100%) brightness(80%)">Noir</button>
+                <button class="filter-btn" data-filter="saturate(150%) contrast(110%)">Vivid</button>
+            </div>
+
+            <div class="camera-actions">
+                <button class="btn-capture" id="btnCapture"></button>
+                <div class="thumbnail-container" id="thumbnailContainer"></div>
+                <button class="btn-primary" id="btnFinishCapture" style="display: none; width: 100%; margin-top: 15px;">Lanjut Edit Foto</button>
+            </div>
+            <canvas id="photoCanvas" style="display: none;"></canvas>
+        </section>
+
+        <section id="step-adjust" class="step-section">
+            <div class="header text-center adjust-header">
+                <h2 style="color: var(--accent-color);">Sesuaikan Posisi</h2>
+                <p>Gunakan 2 jari: Geser, cubit (zoom), & putar.</p>
+            </div>
+            
+            <div class="adjust-workspace-container">
+                <div id="adjustWorkspace" class="adjust-workspace">
+                    <div id="adjustPhotoLayers"></div>
+                    <img id="adjustFrameOverlay" src="" alt="Frame Overlay">
+                </div>
+            </div>
+
+            <div class="adjust-bottom-panel glass-panel" style="padding: 15px; margin-bottom: 15px;">
+                <div class="edit-toolbar-minimal" id="editToolbar">
+                    <button class="btn-tool" id="btnFlipH">↔️ Cermin</button>
+                    <button class="btn-tool" id="btnFlipV">↕️ Balik</button>
+                </div>
+                <div class="thumbnail-container" id="adjustThumbnails"></div>
+                <div class="action-row">
+                    <button class="btn-secondary" id="btnBackToCamera">Ulang</button>
+                    <button class="btn-primary" id="btnConfirmAdjust">Bungkus!</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="step-done" class="step-section">
+            <div class="header text-center" style="margin-top: 20px;">
+                <h2 style="color: var(--accent-color);">Bungkus Lek!</h2>
+                <p>Pilih tipe unduhan lo di bawah.</p>
+            </div>
+            
+            <div class="glass-panel" style="padding: 18px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-color); background: rgba(204, 255, 0, 0.05);">
+                <h3 style="color: var(--text-primary); margin-bottom: 5px; font-family: var(--font-heading); font-size: 1.2rem;">SUPPORT CHORUM! 🚀</h3>
+                <p style="font-size: 0.85rem; margin-bottom: 15px; color: var(--text-secondary);">Pamerin hasil fotomu ke IG Story dan jangan lupa tag kita ya!</p>
+                <a href="https://www.instagram.com/chorummm?igsi=MTlhZHczcW45N3Q5Yw==" target="_blank" class="btn-primary" style="display: inline-block; text-decoration: none; padding: 10px 24px; width: auto; font-size: 0.9rem; background: var(--text-primary);">
+                    Follow @chorummm
+                </a>
+            </div>
+
+            <div class="result-tabs">
+                <button class="tab-btn active" data-target="tab-photo" style="flex: 1;">📸 Foto</button>
+                <button class="tab-btn" data-target="tab-gif" style="flex: 1;">🎞️ GIF</button>
+                <button class="tab-btn" data-target="tab-qr" style="flex: 1;">📲 QR</button>
+            </div>
+
+            <div class="tab-content active" id="tab-photo">
+                <img id="finalResult" src="" alt="Final" class="final-image glass-panel" style="padding: 5px;">
+                <a id="btnDownload" class="btn-primary" download="CHORUM_Photobooth.jpg" style="text-align:center; text-decoration:none; display:block; width:100%;">Download Foto</a>
+            </div>
+
+            <div class="tab-content" id="tab-gif">
+                <div id="gifLoading" style="text-align:center; padding:20px; color: var(--accent-color); font-weight: bold;">
+                    <div class="spinner"></div><br>Merakit Animasi GIF...
+                </div>
+                <img id="finalGif" src="" alt="GIF Result" class="final-image glass-panel" style="display:none; padding: 5px;">
+                <a id="btnDownloadGif" class="btn-primary" download="CHORUM_Animasi.gif" style="display:none; text-align:center; text-decoration:none; width:100%;">Download GIF</a>
+            </div>
+
+            <div class="tab-content" id="tab-qr">
+                <div id="qrLoading" style="text-align:center; padding:20px; color: var(--accent-color); font-weight: bold;">
+                    <div class="spinner"></div><br>Menyiapkan Barcode (Bisa butuh beberapa detik)...
+                </div>
+                <div class="qr-container glass-panel" id="qrContainer" style="display: none; padding: 15px; margin-bottom: 15px;">
+                    <img id="qrCode" src="" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto; background: white; padding: 10px; border-radius: 8px;">
+                </div>
+                <p id="qrHelperText" style="display:none; text-align:center; margin-bottom: 20px; color: var(--text-secondary); font-size: 0.9rem;">Teman lu bisa scan Barcode ini buat download versi HD-nya.</p>
+            </div>
+            
+            <button class="btn-secondary" onclick="window.location.href='index.html'" style="margin-top: auto; margin-bottom: 20px;">Selesai & Kembali</button>
+        </section>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/guest.js"></script>
+</body>
+</html>

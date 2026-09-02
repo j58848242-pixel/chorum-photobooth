@@ -1,0 +1,17 @@
+{
+  "status": "success",
+  "frames": [
+    {
+      "id": "frame_chorum_01",
+      "name": "Template CHORUM 3 Slot",
+      "slots": 3,
+      "url": "assets/images/frames/frame-3-slot.png"
+    },
+    {
+      "id": "frame_chorum_02",
+      "name": "Template Spesial 2 Slot",
+      "slots": 2,
+      "url": "https://vscode.dev/github/j58848242-pixel/chorum-photobooth/blob/main/chorum-photobooth/assets/images/frames/frame-2-slot.png"
+    }
+  ]
+}

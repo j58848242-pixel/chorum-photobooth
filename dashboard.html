@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHORUM Control Center</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="dashboard-body">
+    
+    <!-- MENGGUNAKAN CHORUM GRID SYSTEM (.ch-container) -->
+    <div class="dashboard-wrapper ch-container" style="padding-top: 30px; padding-bottom: 50px;">
+        
+        <!-- Navbar -->
+        <nav class="dash-navbar glass-panel" style="margin-bottom: 30px;">
+            <div class="brand">
+                <div class="brand-icon">C</div>
+                <div>
+                    <h2>CONTROL CENTER</h2>
+                    <span>CHORUM Photobooth</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <div class="stat-badge">Mode: <b style="color: var(--accent-color);">Ultra-Fast (GitHub CDN)</b></div>
+                <a href="index.html" target="_blank" class="btn-secondary btn-sm" style="text-decoration:none;">Lihat Layar Tamu</a>
+            </div>
+        </nav>
+
+        <!-- CH-ROW: PEMBAGIAN GRID RESPONSIVE -->
+        <div class="ch-row">
+            
+            <!-- Kolom Kiri: Saklar Kontrol & Panduan (Lebar 4 Kolom di Desktop Besar) -->
+            <div class="ch-col-12 ch-col-md-5 ch-col-lg-4">
+                
+                <!-- Status Event -->
+                <div class="admin-card glass-panel" style="margin-bottom: 24px;">
+                    <div class="card-header border-bottom">
+                        <h3>STATUS EVENT</h3>
+                        <label class="switch">
+                            <input type="checkbox" id="eventToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <p class="text-muted">Matikan saklar ini untuk mengunci sistem dan mencegah tamu masuk ke layar photobooth.</p>
+                    <div class="status-indicator" id="statusIndicator">
+                        <div class="dot"></div>
+                        <span id="statusText">Memuat Status...</span>
+                    </div>
+                </div>
+
+                <!-- Panduan Manajemen Frame GitHub -->
+                <div class="admin-card glass-panel">
+                    <div class="card-header border-bottom">
+                        <h3>MANAJEMEN FRAME</h3>
+                    </div>
+                    <p class="text-muted" style="margin-top: 15px; font-size: 0.9rem;">
+                        Demi kecepatan instan (0.1 detik), sistem upload dipindahkan sepenuhnya ke <b>GitHub Pages</b>.
+                    </p>
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px dashed var(--border-color);">
+                        <p style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 5px;"><b>Cara Tambah Frame:</b></p>
+                        <ol style="color: var(--text-secondary); font-size: 0.85rem; padding-left: 15px; margin-bottom: 0;">
+                            <li style="margin-bottom: 5px;">Upload PNG transparan ke folder <code>assets/images/frames/</code> di GitHub.</li>
+                            <li>Edit file konfigurasi <code>assets/data/frames.json</code>.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Katalog Frame Read-Only (Lebar 8 Kolom di Desktop Besar) -->
+            <div class="ch-col-12 ch-col-md-7 ch-col-lg-8">
+                
+                <div class="admin-card glass-panel h-100">
+                    <div class="card-header border-bottom">
+                        <h3>KATALOG FRAME AKTIF (LOKAL JSON)</h3>
+                    </div>
+                    <!-- Katalog akan dimuat dari frames.json -->
+                    <div id="frameCatalog" style="display:flex; flex-direction:column; gap:10px; margin-top: 15px;">
+                        <p class="text-muted" style="font-size: 0.8rem;">Membaca file frames.json...</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
