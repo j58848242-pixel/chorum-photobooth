@@ -34,7 +34,6 @@ const photoCanvas = document.getElementById('photoCanvas');
 const finalResult = document.getElementById('finalResult');
 const btnDownload = document.getElementById('btnDownload');
 
-// Elemen QR Code (Baru)
 const qrLoading = document.getElementById('qrLoading');
 const qrContainer = document.getElementById('qrContainer');
 const qrCodeImg = document.getElementById('qrCode');
@@ -57,20 +56,23 @@ let selectedFilter = 'none';
 let isCountingDown = false;
 
 // ==========================================
-// 2. KONEKSI: MUAT FRAME JSON (LOKAL/GITHUB)
+// 2. KONEKSI: MUAT FRAME JSON & CEK STATUS EVENT
 // ==========================================
 window.addEventListener('DOMContentLoaded', async () => {
     btnConfirmFrame.innerText = "Memuat Frame...";
     btnConfirmFrame.disabled = true;
     
     try {
-        // 1. Cek Status Event (Google Apps Script) - Berjalan Paralel
-        checkEventStatus();
-        
-        // 2. Muat Frame Super Cepat dari JSON GitHub/Lokal
-        const res = await fetch(FRAMES_JSON_URL + '?t=' + new Date().getTime()); // Hindari Cache Browser
+        const res = await fetch(FRAMES_JSON_URL + '?t=' + new Date().getTime()); 
         const result = await res.json();
         
+        // Cek Saklar Event Aktif/Tidak
+        if (result.is_event_active !== true) {
+            alert("Maaf, Event Photobooth CHORUM saat ini sedang ditutup.");
+            window.location.href = 'index.html'; 
+            return;
+        }
+
         if (result.status === 'success' && result.frames.length > 0) {
             framesList = result.frames;
             btnConfirmFrame.innerText = "Gunakan Frame Ini";
@@ -86,19 +88,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-async function checkEventStatus() {
-    try {
-        const res = await fetch(`${API_URL}?action=getEventData&eventToken=${EVENT_TOKEN}`);
-        const result = await res.json();
-        if (result.event_status !== 'ON') {
-            alert("Maaf, Event CHORUM telah ditutup oleh Admin.");
-            window.location.href = 'index.html'; 
-        }
-    } catch (e) {
-        console.warn("Pengecekan status event gagal, lanjut mode offline.");
-    }
-}
-
 function updateFrameUI() {
     if(framesList.length === 0) return;
     const currentFrame = framesList[currentFrameIndex];
@@ -111,7 +100,7 @@ btnNextFrame.addEventListener('click', () => { currentFrameIndex = (currentFrame
 btnPrevFrame.addEventListener('click', () => { currentFrameIndex = (currentFrameIndex - 1 + framesList.length) % framesList.length; updateFrameUI(); });
 
 // ==========================================
-// 3. KAMERA (LANDSCAPE CROP 4:3 & PIXEL FILTER ENGINE)
+// 3. KAMERA (LANDSCAPE CROP 4:3 & PIXEL FILTER)
 // ==========================================
 btnConfirmFrame.addEventListener('click', () => {
     sectionFrame.classList.remove('active');
@@ -175,7 +164,6 @@ function renderThumbnails() {
     }
 }
 
-// ENGINE CROP LANDSCAPE 4:3
 function executeCapture() {
     const tempCanvas = document.createElement('canvas');
     const targetW = 1280;
@@ -210,7 +198,6 @@ function executeCapture() {
     ctx.restore();
 
     applyPixelFilter(ctx, targetW, targetH, selectedFilter);
-
     capturedPhotos.push(tempCanvas.toDataURL('image/jpeg', 0.85));
     renderThumbnails();
 }
@@ -445,7 +432,7 @@ btnBackToCamera.addEventListener('click', () => {
 });
 
 // ==========================================
-// 5. RENDER, BYPASS UI, & UPLOAD IMGBB (PARALEL)
+// 5. RENDER FOTO (HD & DIET KOMPRESI)
 // ==========================================
 btnConfirmAdjust.addEventListener('click', async () => {
     const originalText = btnConfirmAdjust.innerText;
@@ -493,10 +480,13 @@ btnConfirmAdjust.addEventListener('click', async () => {
         ctx.drawImage(frameImg, 0, 0, photoCanvas.width, photoCanvas.height);
     }
 
-    // Resolusi HD Lokal (Kecepatan Instan)
+    // Resolusi HD (Untuk di-download langsung oleh tamu, kualitas 90%)
     guestData.photoBase64 = photoCanvas.toDataURL('image/jpeg', 0.9);
     
-    // UI Langsung Dilempar ke Halaman Hasil (Nol Detik Tunggu!)
+    // Resolusi Diet Khusus Upload (Hemat bandwidth, kualitas 40% agar loading QR sangat cepat)
+    const uploadBase64 = photoCanvas.toDataURL('image/jpeg', 0.4); 
+    
+    // BYPASS: LEMPAR LANGSUNG KE LAYAR DOWNLOAD TANPA UPLOAD!
     finalResult.src = guestData.photoBase64; 
     btnDownload.href = guestData.photoBase64;
     
@@ -506,27 +496,25 @@ btnConfirmAdjust.addEventListener('click', async () => {
     sectionAdjust.classList.remove('active');
     sectionDone.classList.add('active'); 
     
-    // Proses Generator berjalan di latar belakang (Tidak Mengganggu Tamu)
+    // Panggil GIF Generator & Eksekusi Upload ke ImgBB di latar belakang
     generateGIF();
-    generateQRCode(guestData.photoBase64);
+    generateQRCode(uploadBase64);
 });
 
 // ==========================================
-// 6. GENERATOR QR CODE (VIA IMGBB API)
+// 6. GENERATOR QR CODE (Cerdas: Arahkan ke Web Sendiri)
 // ==========================================
-async function generateQRCode(base64Image) {
+async function generateQRCode(compressedBase64) {
     qrLoading.style.display = 'block';
     qrContainer.style.display = 'none';
     qrHelperText.style.display = 'none';
 
     try {
-        // Potong header base64 (data:image/jpeg;base64,) karena ImgBB hanya butuh string mentahnya
-        const pureBase64 = base64Image.split(',')[1];
-
+        const pureBase64 = compressedBase64.split(',')[1];
         const formData = new FormData();
         formData.append('image', pureBase64);
 
-        // Upload ke ImgBB
+        // Upload cepat ke ImgBB
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
             method: 'POST',
             body: formData
@@ -535,10 +523,11 @@ async function generateQRCode(base64Image) {
         const result = await response.json();
 
         if (result.success) {
-            const imgbbUrl = result.data.url;
+            const imgId = result.data.id; // Ambil ID unik gambar, BUKAN direct link yang bikin blank
+            const viewerUrl = `${BASE_WEB_URL}view.html?id=${imgId}`; // Rute ke web kita sendiri
             
-            // Konversi URL ImgBB menjadi QR Code
-            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(imgbbUrl)}`;
+            // Konversi URL Web Viewer menjadi QR Code
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}`;
             qrCodeImg.src = qrApiUrl;
             
             qrCodeImg.onload = () => {
@@ -551,7 +540,7 @@ async function generateQRCode(base64Image) {
         }
     } catch (error) {
         console.error("QR Code Error:", error);
-        qrLoading.innerHTML = "Gagal membuat QR Code. Silakan gunakan tombol Download langsung.";
+        qrLoading.innerHTML = "Koneksi tidak stabil. Silakan gunakan tombol Download langsung saja.";
     }
 }
 
