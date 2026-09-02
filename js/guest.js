@@ -502,7 +502,7 @@ btnConfirmAdjust.addEventListener('click', async () => {
 });
 
 // ==========================================
-// 6. GENERATOR QR CODE (Cerdas: Arahkan ke Web Sendiri)
+// 6. GENERATOR QR CODE (Menggunakan ImgBB Viewer Resmi)
 // ==========================================
 async function generateQRCode(compressedBase64) {
     qrLoading.style.display = 'block';
@@ -523,10 +523,10 @@ async function generateQRCode(compressedBase64) {
         const result = await response.json();
 
         if (result.success) {
-            const imgUrl = result.data.display_url; // Ambil URL gambar langsung dari ImgBB
-            const viewerUrl = `${BASE_WEB_URL}view.html?url=${encodeURIComponent(imgUrl)}`; // Rute ke web dengan parameter URL
+            // Ambil URL halaman viewer resmi dari ImgBB (Contoh: https://ibb.co/rGy4dCRh)
+            const viewerUrl = result.data.url_viewer; 
             
-            // Konversi URL Web Viewer menjadi QR Code
+            // Konversi URL Viewer tersebut menjadi QR Code
             const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}`;
             qrCodeImg.src = qrApiUrl;
             
