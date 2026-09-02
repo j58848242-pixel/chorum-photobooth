@@ -13,4 +13,4 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzGA63-ANuO0ANIsIsdrbvB
 const EVENT_TOKEN = "CHORUM-001";
 
 // 4. URL Database Frame Lokal (Host di GitHub)
-const FRAMES_JSON_URL = "assets/data/frames.json";
+const FRAMES_JSON_URL = "assets/images/frames/frames.json";
