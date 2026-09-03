@@ -502,7 +502,7 @@ btnConfirmAdjust.addEventListener('click', async () => {
 });
 
 // ==========================================
-// 6. GENERATOR QR CODE (Armor Base64 Aktif)
+// 6. GENERATOR QR CODE (Dilengkapi Deteksi Error Asli)
 // ==========================================
 async function generateQRCode(compressedBase64) {
     qrLoading.style.display = 'block';
@@ -514,7 +514,7 @@ async function generateQRCode(compressedBase64) {
         const formData = new FormData();
         formData.append('image', pureBase64);
 
-        // Upload cepat ke ImgBB
+        // Upload ke ImgBB
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
             method: 'POST',
             body: formData
@@ -523,16 +523,10 @@ async function generateQRCode(compressedBase64) {
         const result = await response.json();
 
         if (result.success) {
-            // 1. Ambil URL gambar mentah
             const imgUrl = result.data.display_url; 
-            
-            // 2. ENKRIPSI KE BASE64 (Agar karakter aneh seperti :// dan / hilang)
             const safeBase64Data = btoa(imgUrl);
-            
-            // 3. Gabungkan dengan URL web Chorum Anda (Ubah parameter jadi '?data=')
             const viewerUrl = `${BASE_WEB_URL}view.html?data=${safeBase64Data}`; 
             
-            // 4. Cetak QR Code
             const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}`;
             qrCodeImg.src = qrApiUrl;
             
@@ -542,11 +536,13 @@ async function generateQRCode(compressedBase64) {
                 qrHelperText.style.display = 'block';
             };
         } else {
-            throw new Error("Gagal upload ke ImgBB");
+            // Tangkap pesan error spesifik dari ImgBB
+            throw new Error(result.error?.message || "ImgBB menolak unggahan (Kemungkinan Kunci API salah/limit).");
         }
     } catch (error) {
-        console.error("QR Code Error:", error);
-        qrLoading.innerHTML = "Koneksi tidak stabil. Silakan gunakan tombol Download langsung saja.";
+        console.error("QR Code Error Detail:", error);
+        // Tampilkan pesan error ASLI di layar agar kita tahu persis kendalanya
+        qrLoading.innerHTML = `⚠️ Gagal Membuat QR:<br><span style="font-size: 0.75rem; color: #ff5555; word-break: break-all;">${error.message}</span><br><br>Silakan gunakan tombol Download langsung.`;
     }
 }
 
