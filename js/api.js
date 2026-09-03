@@ -3,7 +3,7 @@
 // ==========================================
 
 // 1. Kunci API ImgBB (Mesin CDN Gambar)
-const IMGBB_API_KEY = "81b5f54e02ef8359fa568d105cfe8043";
+const IMGBB_API_KEY = "4f4b291ad11076f6eebdd5ef7a96a5a3";
 
 // 2. URL Database Frame & Status Lokal (Host di GitHub)
 const FRAMES_JSON_URL = "assets/images/frames/frames.json";
