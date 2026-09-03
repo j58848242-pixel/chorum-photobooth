@@ -502,7 +502,7 @@ btnConfirmAdjust.addEventListener('click', async () => {
 });
 
 // ==========================================
-// 6. GENERATOR QR CODE (Menggunakan ImgBB Viewer Resmi)
+// 6. GENERATOR QR CODE (Armor Base64 Aktif)
 // ==========================================
 async function generateQRCode(compressedBase64) {
     qrLoading.style.display = 'block';
@@ -523,10 +523,16 @@ async function generateQRCode(compressedBase64) {
         const result = await response.json();
 
         if (result.success) {
-            // Ambil URL halaman viewer resmi dari ImgBB (Contoh: https://ibb.co/rGy4dCRh)
-            const viewerUrl = result.data.url_viewer; 
+            // 1. Ambil URL gambar mentah
+            const imgUrl = result.data.display_url; 
             
-            // Konversi URL Viewer tersebut menjadi QR Code
+            // 2. ENKRIPSI KE BASE64 (Agar karakter aneh seperti :// dan / hilang)
+            const safeBase64Data = btoa(imgUrl);
+            
+            // 3. Gabungkan dengan URL web Chorum Anda (Ubah parameter jadi '?data=')
+            const viewerUrl = `${BASE_WEB_URL}view.html?data=${safeBase64Data}`; 
+            
+            // 4. Cetak QR Code
             const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}`;
             qrCodeImg.src = qrApiUrl;
             
