@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CHORUM Photobooth - Memori Lo!</title>
     
-    <!-- Memanggil font dari CSS utama jika ada -->
     <link rel="stylesheet" href="css/style.css">
     
     <style>
-        /* Desain Khusus Halaman Viewer agar Mandiri & Ringan */
         body {
             background-color: #0a0a0a;
             color: #ffffff;
@@ -55,7 +53,7 @@
         .photo-frame img {
             width: 100%;
             border-radius: 8px;
-            display: none; /* Disembunyikan sampai selesai dimuat */
+            display: none; 
         }
         .btn-action {
             display: block;
@@ -141,24 +139,31 @@
     </div>
 
     <script>
-        // Mesin Penarik URL Cerdas
+        // Mesin Penarik & Dekoder URL Cerdas (Base64)
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const photoUrl = urlParams.get('url');
+            const encodedData = urlParams.get('data'); 
             
             const guestPhoto = document.getElementById('guestPhoto');
             const loadingState = document.getElementById('loadingState');
 
-            if (photoUrl) {
-                // Proses pemuatan gambar
-                guestPhoto.src = photoUrl;
-                guestPhoto.onload = () => {
-                    loadingState.style.display = 'none';
-                    guestPhoto.style.display = 'block';
-                };
-                guestPhoto.onerror = () => {
-                    loadingState.innerHTML = "❌<br>Duh, gambar gagal dimuat.<br>Mungkin sudah dihapus dari server.";
-                };
+            if (encodedData) {
+                try {
+                    // DEKRIPSI BASE64 mengembalikan string URL asli
+                    const photoUrl = atob(encodedData);
+                    
+                    // Proses pemuatan gambar
+                    guestPhoto.src = photoUrl;
+                    guestPhoto.onload = () => {
+                        loadingState.style.display = 'none';
+                        guestPhoto.style.display = 'block';
+                    };
+                    guestPhoto.onerror = () => {
+                        loadingState.innerHTML = "❌<br>Duh, gambar gagal dimuat.<br>Mungkin sudah dihapus dari server.";
+                    };
+                } catch (e) {
+                    loadingState.innerHTML = "⚠️<br>Data QR tidak valid atau rusak.";
+                }
             } else {
                 loadingState.innerHTML = "⚠️<br>URL tidak valid. Foto tidak ditemukan.";
             }
