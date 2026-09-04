@@ -1,5 +1,5 @@
 // ==========================================
-// 1. INISIALISASI DOM
+// 1. INISIALISASI DOM & HAPTIC ENGINE
 // ==========================================
 const btnConfirmFrame = document.getElementById('btnConfirmFrame');
 
@@ -42,6 +42,15 @@ const qrContainer = document.getElementById('qrContainer');
 const qrCodeImg = document.getElementById('qrCode');
 const qrHelperText = document.getElementById('qrHelperText');
 
+// --- HAPTIC ENGINE (GETARAN FISIK) ---
+const Haptic = {
+    tap: () => { if (navigator.vibrate) navigator.vibrate(15); },
+    tick: () => { if (navigator.vibrate) navigator.vibrate(25); },
+    shutter: () => { if (navigator.vibrate) navigator.vibrate([40, 25, 85]); },
+    success: () => { if (navigator.vibrate) navigator.vibrate([70, 40, 130]); },
+    error: () => { if (navigator.vibrate) navigator.vibrate([50, 50, 50]); }
+};
+
 // ==========================================
 // VARIABEL GLOBAL
 // ==========================================
@@ -59,6 +68,14 @@ let selectedFilter = 'none';
 let isCountingDown = false;
 let currentFacingMode = 'user'; 
 let isFlashActive = false;
+
+// Kumpulan Microcopy Dinamis
+const posePrompts = ["Senyum Manis! 😊", "Gaya Bebas! ✌️", "Slay Terus! 🔥", "Muka Jelek! 🤪", "Finger Heart! 🫰"];
+
+// Tambahkan haptic di semua tombol secara umum
+document.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', Haptic.tap);
+});
 
 // ==========================================
 // 2. KONEKSI: MUAT FRAME JSON
@@ -104,7 +121,7 @@ btnNextFrame.addEventListener('click', () => { currentFrameIndex = (currentFrame
 btnPrevFrame.addEventListener('click', () => { currentFrameIndex = (currentFrameIndex - 1 + framesList.length) % framesList.length; updateFrameUI(); });
 
 // ==========================================
-// 3. KAMERA PRO (PAKSA 4K & SWITCH KAMERA)
+// 3. KAMERA PRO (4K, DUAL FLASH, MICROCOPY)
 // ==========================================
 btnConfirmFrame.addEventListener('click', () => {
     sectionFrame.classList.remove('active');
@@ -188,51 +205,54 @@ function renderThumbnails() {
         const btnDel = document.createElement('button');
         btnDel.className = 'btn-delete-thumb';
         btnDel.innerHTML = '×';
-        btnDel.onclick = () => { capturedPhotos.splice(index, 1); renderThumbnails(); };
+        btnDel.onclick = (e) => { 
+            e.stopPropagation();
+            Haptic.tap();
+            capturedPhotos.splice(index, 1); 
+            renderThumbnails(); 
+        };
         
         div.appendChild(img);
         div.appendChild(btnDel);
         thumbnailContainer.appendChild(div);
     });
 
-    captureHelperText.innerText = `Pose terbaik lu! (${capturedPhotos.length}/${currentSlots})`;
+    // MICROCOPY DINAMIS BERDASARKAN URUTAN FOTO
+    let nextPoseIndex = capturedPhotos.length;
+    let prompt = posePrompts[nextPoseIndex % posePrompts.length];
     
     if (capturedPhotos.length >= currentSlots) {
+        captureHelperText.innerText = `Sempurna! Semua slot terisi ✨ (${capturedPhotos.length}/${currentSlots})`;
         btnCapture.style.display = 'none';
         btnFinishCapture.style.display = 'block';
     } else {
+        captureHelperText.innerText = `Pose ${nextPoseIndex + 1}: ${prompt} (${capturedPhotos.length}/${currentSlots})`;
         btnCapture.style.display = 'block';
         btnFinishCapture.style.display = 'none';
     }
 }
 
-// ==========================================
 // MESIN DUAL FLASH (Hardware + Software)
-// ==========================================
 async function triggerCapture() {
     if (isFlashActive) {
         const track = videoStream ? videoStream.getVideoTracks()[0] : null;
         let torchSuccess = false;
 
-        // Jika kamera belakang aktif, coba nyalakan lampu senter (Torch API)
         if (currentFacingMode === 'environment' && track) {
             try {
                 await track.applyConstraints({ advanced: [{ torch: true }] });
                 torchSuccess = true;
                 
-                // Tunggu 250ms agar sensor kamera menyesuaikan cahaya, lalu jepret
                 setTimeout(() => {
                     executeCapture();
-                    // Matikan senter setelah jepret (Abaikan jika error)
                     track.applyConstraints({ advanced: [{ torch: false }] }).catch(e => {});
                 }, 250);
             } catch (error) {
-                console.log("Hardware Flash tidak didukung (iOS/Safari block), beralih ke Screen Flash.");
+                console.log("Hardware Flash tidak didukung, beralih ke Screen Flash.");
                 torchSuccess = false;
             }
         }
 
-        // Jika kamera depan, ATAU lampu senter belakang gagal dinyalakan (Fallback Anti-Bug)
         if (!torchSuccess) {
             flashOverlay.style.display = 'block';
             void flashOverlay.offsetWidth; 
@@ -262,6 +282,7 @@ btnCapture.addEventListener('click', () => {
         countdownOverlay.classList.remove('pop-anim');
         void countdownOverlay.offsetWidth; 
         countdownOverlay.classList.add('pop-anim');
+        Haptic.tick(); // Haptic detik pertama
 
         const interval = setInterval(() => {
             timeLeft--;
@@ -270,6 +291,7 @@ btnCapture.addEventListener('click', () => {
                 countdownOverlay.classList.remove('pop-anim');
                 void countdownOverlay.offsetWidth;
                 countdownOverlay.classList.add('pop-anim');
+                Haptic.tick(); // Haptic detak timer
             } else {
                 clearInterval(interval);
                 countdownOverlay.style.display = 'none';
@@ -286,6 +308,8 @@ btnCapture.addEventListener('click', () => {
 });
 
 function executeCapture() {
+    Haptic.shutter(); // Getaran fisik rana DSLR
+
     const tempCanvas = document.createElement('canvas');
     const targetW = 1920;
     const targetH = 1440; 
@@ -440,18 +464,29 @@ btnFinishCapture.addEventListener('click', async () => {
         adjustPhotoLayers.appendChild(slotDiv);
 
         const thumb = document.createElement('div');
+        // KELAS ACTIVE-EDIT CSS DIAPLIKASIKAN DI SINI
         thumb.className = `thumbnail-item ${index === 0 ? 'active-edit' : ''}`;
         thumb.innerHTML = `<img src="${photoUrl}">`;
-        thumb.onclick = () => setActiveEdit(index);
+        thumb.onclick = () => { 
+            Haptic.tap();
+            setActiveEdit(index); 
+        };
         adjustThumbnails.appendChild(thumb);
     });
     setActiveEdit(0); 
 });
 
+// LOGIKA PERPINDAHAN KOTAK BERSINAR (ACTIVE BOX)
 function setActiveEdit(index) {
     activeEditIndex = index;
-    document.querySelectorAll('#adjustThumbnails .thumbnail-item').forEach((el, i) => { el.classList.toggle('active-edit', i === index); });
-    document.querySelectorAll('.adjust-photo-item').forEach((el, i) => { el.parentElement.style.zIndex = i === index ? '5' : '1'; });
+    // Mengatur redup/terang thumbnail
+    document.querySelectorAll('#adjustThumbnails .thumbnail-item').forEach((el, i) => { 
+        el.classList.toggle('active-edit', i === index); 
+    });
+    // Mengangkat z-index foto yang diedit
+    document.querySelectorAll('.adjust-photo-item').forEach((el, i) => { 
+        el.parentElement.style.zIndex = i === index ? '5' : '1'; 
+    });
 }
 
 function updateTransformUI() {
@@ -525,7 +560,7 @@ btnBackToCamera.addEventListener('click', () => {
 });
 
 // ==========================================
-// 5. RENDER FOTO HD
+// 5. RENDER FOTO (HD 90%)
 // ==========================================
 btnConfirmAdjust.addEventListener('click', async () => {
     const originalText = btnConfirmAdjust.innerText;
@@ -593,7 +628,7 @@ btnConfirmAdjust.addEventListener('click', async () => {
 });
 
 // ==========================================
-// 6. GENERATOR QR CODE (URL-Safe Armor Terpasang)
+// 6. GENERATOR QR CODE (URL-SAFE ARMOR)
 // ==========================================
 async function generateQRCode(compressedBase64) {
     qrLoading.style.display = 'block';
@@ -614,7 +649,6 @@ async function generateQRCode(compressedBase64) {
 
         if (result.success) {
             const imgUrl = result.data.display_url; 
-            // PENGAMAN GANDA: encodeURIComponent mencegah terputusnya karakter di dalam parameter URL
             const safeBase64Data = encodeURIComponent(btoa(imgUrl));
             const viewerUrl = `${BASE_WEB_URL}view.html?data=${safeBase64Data}`; 
             
@@ -622,16 +656,18 @@ async function generateQRCode(compressedBase64) {
             qrCodeImg.src = qrApiUrl;
             
             qrCodeImg.onload = () => {
+                Haptic.success(); // Haptic berhasil!
                 qrLoading.style.display = 'none';
                 qrContainer.style.display = 'block';
                 qrHelperText.style.display = 'block';
             };
         } else {
-            throw new Error(result.error?.message || "ImgBB menolak unggahan (Limit API/Server Penuh).");
+            throw new Error(result.error?.message || "ImgBB menolak unggahan.");
         }
     } catch (error) {
+        Haptic.error(); // Haptic error
         console.error("QR Code Error Detail:", error);
-        qrLoading.innerHTML = `⚠️ Gagal Membuat QR:<br><span style="font-size: 0.75rem; color: #ff5555; word-break: break-all;">${error.message}</span><br><br>Silakan tekan tombol Download Langsung.`;
+        qrLoading.innerHTML = `⚠️ Gagal Membuat QR:<br><span style="font-size: 0.75rem; color: #ff5555;">${error.message}</span><br><br>Gunakan tombol Download Langsung.`;
     }
 }
 
