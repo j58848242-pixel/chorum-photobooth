@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/guest.css">
     <style>
-        /* CSS Khusus Fitur Baru (Langsung jalan tanpa edit file CSS eksternal) */
         .flash-overlay {
             position: fixed;
             top: 0;
@@ -17,7 +16,7 @@
             background-color: white;
             z-index: 9999;
             opacity: 0;
-            pointer-events: none; /* Agar tidak menghalangi sentuhan layar */
+            pointer-events: none;
             transition: opacity 0.1s ease-out;
             display: none;
         }
@@ -51,12 +50,10 @@
 </head>
 <body>
     
-    <!-- ELEMEN LAYAR SOFTBOX (FLASH) -->
     <div id="flashOverlay" class="flash-overlay"></div>
 
     <div class="app-container">
         
-        <!-- SECTION: FRAME -->
         <section id="step-frame" class="step-section active">
             <div class="header text-center adjust-header" style="margin-top: 20px;">
                 <h2 style="color: var(--accent-color);">Pilih Frame</h2>
@@ -75,20 +72,17 @@
             <button class="btn-primary" id="btnConfirmFrame" style="margin-top: auto; margin-bottom: 20px;">Gunakan Frame Ini</button>
         </section>
 
-        <!-- SECTION: CAMERA -->
         <section id="step-camera" class="step-section">
             <div class="header text-center adjust-header" style="margin-top: 10px; margin-bottom: 10px;">
                 <h2>Waktunya Aksi</h2>
                 <p id="captureHelperText">Pose terbaikmu! (0/3)</p>
             </div>
 
-            <!-- ALAT TAMBAHAN: PUTAR KAMERA & FLASH -->
             <div class="camera-tools">
                 <button class="btn-camera-tool" id="btnSwitchCamera">🔄 Putar Lensa</button>
                 <button class="btn-camera-tool" id="btnToggleFlash">💡 Flash: OFF</button>
             </div>
 
-            <!-- TIMER -->
             <div class="timer-controls glass-panel">
                 <button class="timer-btn active" data-time="0">⚡ Off</button>
                 <button class="timer-btn" data-time="3">3s</button>
@@ -124,7 +118,6 @@
             <canvas id="photoCanvas" style="display: none;"></canvas>
         </section>
 
-        <!-- SECTION: ADJUST -->
         <section id="step-adjust" class="step-section">
             <div class="header text-center adjust-header">
                 <h2 style="color: var(--accent-color);">Sesuaikan Posisi</h2>
@@ -151,14 +144,12 @@
             </div>
         </section>
 
-        <!-- SECTION: DONE -->
         <section id="step-done" class="step-section">
             <div class="header text-center" style="margin-top: 20px;">
                 <h2 style="color: var(--accent-color);">Bungkus Lek!</h2>
                 <p>Pilih tipe unduhan lo di bawah.</p>
             </div>
             
-            <!-- BRANDING & SUPPORT -->
             <div class="glass-panel" style="padding: 18px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-color); background: rgba(204, 255, 0, 0.05);">
                 <h3 style="color: var(--text-primary); margin-bottom: 5px; font-family: var(--font-heading); font-size: 1.2rem;">SUPPORT CHORUM! 🚀</h3>
                 <p style="font-size: 0.85rem; margin-bottom: 15px; color: var(--text-secondary);">Pamerin hasil fotomu ke IG Story dan jangan lupa tag kita ya!</p>
@@ -201,9 +192,8 @@
 
     </div>
 
-    <!-- SCRIPT INCLUDES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/guest.js?v=3.0"></script>
+    <script src="js/guest.js?v=4.0"></script>
 </body>
 </html>
