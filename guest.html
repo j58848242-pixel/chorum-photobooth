@@ -3,10 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CHORUM Photobooth</title>
+    <title>CHORUM Photobooth - Luxury Agency Grade</title>
+    
+    <!-- GOOGLE FONTS: ANTONIO, PLUS JAKARTA SANS, JETBRAINS MONO -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/guest.css">
+    
     <style>
+        /* ==========================================================
+           LUXURY AGENCY DESIGN SYSTEM & SYSTEM VARIABLES ($500+ GRADE)
+           ========================================================== */
+        :root {
+            --bg-deep: #070709;
+            --surface-glass: rgba(18, 18, 24, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.12);
+            --neon-lime: #ccff00;
+            --font-heading: 'Antonio', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #ffffff;
+            font-family: var(--font-body);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: var(--font-heading);
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .font-mono-code {
+            font-family: var(--font-mono);
+        }
+
+        /* Bento Grid Wrapper (Max-width matematis) */
+        .app-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 24px 16px 48px 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        /* Softbox Flash Overlay */
         .flash-overlay {
             position: fixed;
             top: 0;
@@ -20,43 +72,167 @@
             transition: opacity 0.1s ease-out;
             display: none;
         }
+
+        /* Floating Transformation Toolbar ($500+ Luxury Pill) */
+        .floating-toolbar {
+            background: rgba(14, 14, 18, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            padding: 12px 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 16px auto;
+            width: fit-content;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-tool-icon {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.75);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn-tool-icon:hover {
+            color: var(--neon-lime);
+            transform: scale(1.1);
+        }
+
+        /* Active Slot Bounding Box & Inactive State */
+        .slot-bounding-box {
+            position: absolute;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+
+        .slot-active {
+            border: 2px solid var(--neon-lime);
+            box-shadow: 0 0 20px rgba(204, 255, 0, 0.35);
+            opacity: 1;
+            z-index: 5;
+        }
+
+        .slot-inactive {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0.5;
+            z-index: 1;
+        }
+        .slot-inactive:hover {
+            opacity: 0.85;
+        }
+
+        /* Badge Nomor Urut Slot */
+        .slot-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            z-index: 10;
+        }
+        .badge-active {
+            background-color: var(--neon-lime);
+            color: #000000;
+            box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
+        }
+        .badge-inactive {
+            background-color: rgba(0, 0, 0, 0.6);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Camera Pro Tool Buttons */
         .camera-tools {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin: 10px 0;
         }
         .btn-camera-tool {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 9999px;
             font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            font-weight: bold;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            white-space: nowrap;
         }
         .btn-camera-tool.active {
-            background: var(--accent-color, #ccff00);
+            background: var(--neon-lime);
             color: #000;
-            border-color: var(--accent-color, #ccff00);
-            box-shadow: 0 0 10px rgba(204, 255, 0, 0.4);
+            border-color: var(--neon-lime);
+            box-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
+        }
+
+        /* Button Padding Ratio 2:1 */
+        .btn-custom-primary {
+            background-color: var(--neon-lime);
+            color: #000;
+            font-weight: 700;
+            padding: 12px 24px; /* Py 12px, Px 24px (Ratio 2:1) */
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            white-space: nowrap;
+        }
+        .btn-custom-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Footer Hak Cipta CHORUM 2026 */
+        .legal-footer {
+            position: fixed;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            z-index: 1000;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+        .legal-footer:hover {
+            color: rgba(255, 255, 255, 0.85);
         }
     </style>
 </head>
 <body>
     
+    <!-- ELEMEN LAYAR SOFTBOX (FLASH) -->
     <div id="flashOverlay" class="flash-overlay"></div>
 
     <div class="app-container">
         
+        <!-- SECTION: FRAME -->
         <section id="step-frame" class="step-section active">
             <div class="header text-center adjust-header" style="margin-top: 20px;">
-                <h2 style="color: var(--accent-color);">Pilih Frame</h2>
+                <h2 style="color: var(--neon-lime);">Pilih Frame</h2>
                 <p>Pilih desain CHORUM favorit lu!</p>
             </div>
             
@@ -69,9 +245,10 @@
                 <button class="nav-btn" id="btnNextFrame">&gt;</button>
             </div>
 
-            <button class="btn-primary" id="btnConfirmFrame" style="margin-top: auto; margin-bottom: 20px;">Gunakan Frame Ini</button>
+            <button class="btn-custom-primary" id="btnConfirmFrame" style="margin-top: auto; margin-bottom: 20px; width: 100%;">Gunakan Frame Ini</button>
         </section>
 
+        <!-- SECTION: CAMERA -->
         <section id="step-camera" class="step-section">
             <div class="header text-center adjust-header" style="margin-top: 10px; margin-bottom: 10px;">
                 <h2>Waktunya Aksi</h2>
@@ -113,15 +290,16 @@
             <div class="camera-actions">
                 <button class="btn-capture" id="btnCapture"></button>
                 <div class="thumbnail-container" id="thumbnailContainer"></div>
-                <button class="btn-primary" id="btnFinishCapture" style="display: none; width: 100%; margin-top: 15px;">Lanjut Edit Foto</button>
+                <button class="btn-custom-primary" id="btnFinishCapture" style="display: none; width: 100%; margin-top: 15px;">Lanjut Edit Foto</button>
             </div>
             <canvas id="photoCanvas" style="display: none;"></canvas>
         </section>
 
+        <!-- SECTION: ADJUST -->
         <section id="step-adjust" class="step-section">
             <div class="header text-center adjust-header">
-                <h2 style="color: var(--accent-color);">Sesuaikan Posisi</h2>
-                <p>Gunakan 2 jari: Geser, cubit (zoom), & putar.</p>
+                <h2 style="color: var(--neon-lime);">Sesuaikan Posisi</h2>
+                <p id="adjustMicrocopy">Sedang mengatur Pose aktif • Geser foto atau gunakan bilah kontrol.</p>
             </div>
             
             <div class="adjust-workspace-container">
@@ -131,29 +309,40 @@
                 </div>
             </div>
 
+            <!-- FLOATING TRANSFORMATION TOOLBAR ($500+ LUXURY PILL) -->
+            <div class="floating-toolbar" id="editToolbar">
+                <button class="btn-tool-icon" id="btnZoomIn" title="Perbesar">🔍+</button>
+                <button class="btn-tool-icon" id="btnZoomOut" title="Perkecil">🔍-</button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-tool-icon" id="btnRotateLeft" title="Putar Kiri">↺</button>
+                <button class="btn-tool-icon" id="btnRotateRight" title="Putar Kanan">↻</button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-tool-icon" id="btnFlipH" title="Cermin Horizontal">↔️</button>
+                <button class="btn-tool-icon" id="btnFlipV" title="Cermin Vertikal">↕️</button>
+                <div class="toolbar-divider"></div>
+                <button class="btn-tool-icon font-mono-code" id="btnResetTransform" style="font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6);">RESET</button>
+            </div>
+
             <div class="adjust-bottom-panel glass-panel" style="padding: 15px; margin-bottom: 15px;">
-                <div class="edit-toolbar-minimal" id="editToolbar">
-                    <button class="btn-tool" id="btnFlipH">↔️ Cermin</button>
-                    <button class="btn-tool" id="btnFlipV">↕️ Balik</button>
-                </div>
                 <div class="thumbnail-container" id="adjustThumbnails"></div>
-                <div class="action-row">
-                    <button class="btn-secondary" id="btnBackToCamera">Ulang</button>
-                    <button class="btn-primary" id="btnConfirmAdjust">Bungkus!</button>
+                <div class="action-row" style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn-secondary" id="btnBackToCamera" style="flex: 1;">Ulang</button>
+                    <button class="btn-custom-primary" id="btnConfirmAdjust" style="flex: 2;">Bungkus!</button>
                 </div>
             </div>
         </section>
 
+        <!-- SECTION: DONE -->
         <section id="step-done" class="step-section">
             <div class="header text-center" style="margin-top: 20px;">
-                <h2 style="color: var(--accent-color);">Bungkus Lek!</h2>
+                <h2 style="color: var(--neon-lime);">Bungkus Lek!</h2>
                 <p>Pilih tipe unduhan lo di bawah.</p>
             </div>
             
-            <div class="glass-panel" style="padding: 18px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-color); background: rgba(204, 255, 0, 0.05);">
-                <h3 style="color: var(--text-primary); margin-bottom: 5px; font-family: var(--font-heading); font-size: 1.2rem;">SUPPORT CHORUM! 🚀</h3>
-                <p style="font-size: 0.85rem; margin-bottom: 15px; color: var(--text-secondary);">Pamerin hasil fotomu ke IG Story dan jangan lupa tag kita ya!</p>
-                <a href="https://www.instagram.com/chorummm?igsi=MTlhZHczcW45N3Q5Yw==" target="_blank" class="btn-primary" style="display: inline-block; text-decoration: none; padding: 10px 24px; width: auto; font-size: 0.9rem; background: var(--text-primary);">
+            <div class="glass-panel" style="padding: 18px; margin-bottom: 20px; text-align: center; border: 1px solid var(--neon-lime); background: rgba(204, 255, 0, 0.05);">
+                <h3 style="color: #fff; margin-bottom: 5px; font-family: var(--font-heading); font-size: 1.2rem;">SUPPORT CHORUM! 🚀</h3>
+                <p style="font-size: 0.85rem; margin-bottom: 15px; color: rgba(255,255,255,0.7);">Pamerin hasil fotomu ke IG Story dan jangan lupa tag kita ya!</p>
+                <a href="https://www.instagram.com/chorummm?igsi=MTlhZHczcW45N3Q5Yw==" target="_blank" class="btn-custom-primary" style="display: inline-block; text-decoration: none; padding: 10px 24px; width: auto; font-size: 0.9rem; background: #fff; color: #000;">
                     Follow @chorummm
                 </a>
             </div>
@@ -166,25 +355,25 @@
 
             <div class="tab-content active" id="tab-photo">
                 <img id="finalResult" src="" alt="Final" class="final-image glass-panel" style="padding: 5px;">
-                <a id="btnDownload" class="btn-primary" download="CHORUM_Photobooth.jpg" style="text-align:center; text-decoration:none; display:block; width:100%;">Download Foto HD</a>
+                <a id="btnDownload" class="btn-custom-primary" download="CHORUM_Photobooth.jpg" style="text-align:center; text-decoration:none; display:block; width:100%;">Download Foto HD</a>
             </div>
 
             <div class="tab-content" id="tab-gif">
-                <div id="gifLoading" style="text-align:center; padding:20px; color: var(--accent-color); font-weight: bold;">
+                <div id="gifLoading" style="text-align:center; padding:20px; color: var(--neon-lime); font-weight: bold;">
                     <div class="spinner"></div><br>Merakit Animasi GIF...
                 </div>
                 <img id="finalGif" src="" alt="GIF Result" class="final-image glass-panel" style="display:none; padding: 5px;">
-                <a id="btnDownloadGif" class="btn-primary" download="CHORUM_Animasi.gif" style="display:none; text-align:center; text-decoration:none; width:100%;">Download GIF</a>
+                <a id="btnDownloadGif" class="btn-custom-primary" download="CHORUM_Animasi.gif" style="display:none; text-align:center; text-decoration:none; width:100%;">Download GIF</a>
             </div>
 
             <div class="tab-content" id="tab-qr">
-                <div id="qrLoading" style="text-align:center; padding:20px; color: var(--accent-color); font-weight: bold;">
+                <div id="qrLoading" style="text-align:center; padding:20px; color: var(--neon-lime); font-weight: bold;">
                     <div class="spinner"></div><br>Mengunggah Gambar Resolusi Tinggi... (Mohon tunggu 3-5 detik)
                 </div>
                 <div class="qr-container glass-panel" id="qrContainer" style="display: none; padding: 15px; margin-bottom: 15px;">
                     <img id="qrCode" src="" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto; background: white; padding: 10px; border-radius: 8px;">
                 </div>
-                <p id="qrHelperText" style="display:none; text-align:center; margin-bottom: 20px; color: var(--text-secondary); font-size: 0.9rem;">Teman lu bisa scan Barcode ini buat buka foto HD-nya.</p>
+                <p id="qrHelperText" style="display:none; text-align:center; margin-bottom: 20px; color: rgba(255,255,255,0.7); font-size: 0.9rem;">Teman lu bisa scan Barcode ini buat buka foto HD-nya.</p>
             </div>
             
             <button class="btn-secondary" onclick="window.location.href='index.html'" style="margin-top: auto; margin-bottom: 20px;">Selesai & Kembali</button>
@@ -192,8 +381,14 @@
 
     </div>
 
+    <!-- LEGAL FOOTER HAK CIPTA CHORUM 2026 -->
+    <div class="legal-footer">
+        SOLO MARKET FEST EXCLUSIVE • © 2026 CHORUM. ALL RIGHTS RESERVED.
+    </div>
+
+    <!-- SCRIPT INCLUDES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/guest.js?v=4.0"></script>
+    <script src="js/guest.js?v=5.0"></script>
 </body>
 </html>
