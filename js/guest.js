@@ -13,11 +13,15 @@ const btnPrevFrame = document.getElementById('btnPrevFrame');
 const btnNextFrame = document.getElementById('btnNextFrame');
 const frameNameDisplay = document.getElementById('frameNameDisplay');
 
+// DOM Kamera Tambahan (Fitur Pro)
 const cameraStream = document.getElementById('cameraStream');
 const btnCapture = document.getElementById('btnCapture');
 const btnFinishCapture = document.getElementById('btnFinishCapture');
 const captureHelperText = document.getElementById('captureHelperText');
 const thumbnailContainer = document.getElementById('thumbnailContainer');
+const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+const btnToggleFlash = document.getElementById('btnToggleFlash');
+const flashOverlay = document.getElementById('flashOverlay');
 
 const timerBtns = document.querySelectorAll('.timer-btn');
 const filterBtns = document.querySelectorAll('.filter-btn');
@@ -40,7 +44,7 @@ const qrCodeImg = document.getElementById('qrCode');
 const qrHelperText = document.getElementById('qrHelperText');
 
 // ==========================================
-// VARIABEL GLOBAL
+// VARIABEL GLOBAL (Di-upgrade)
 // ==========================================
 window.guestData = window.guestData || { selectedFrame: '', photoBase64: '' };
 let videoStream = null;
@@ -55,6 +59,10 @@ let selectedTimer = 0;
 let selectedFilter = 'none';
 let isCountingDown = false;
 
+// Variabel Kontrol Hardware
+let currentFacingMode = 'user'; // 'user' = Depan, 'environment' = Belakang
+let isFlashActive = false;
+
 // ==========================================
 // 2. KONEKSI: MUAT FRAME JSON & CEK STATUS EVENT
 // ==========================================
@@ -66,7 +74,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         const res = await fetch(FRAMES_JSON_URL + '?t=' + new Date().getTime()); 
         const result = await res.json();
         
-        // Cek Saklar Event Aktif/Tidak
         if (result.is_event_active !== true) {
             alert("Maaf, Event Photobooth CHORUM saat ini sedang ditutup.");
             window.location.href = 'index.html'; 
@@ -100,7 +107,7 @@ btnNextFrame.addEventListener('click', () => { currentFrameIndex = (currentFrame
 btnPrevFrame.addEventListener('click', () => { currentFrameIndex = (currentFrameIndex - 1 + framesList.length) % framesList.length; updateFrameUI(); });
 
 // ==========================================
-// 3. KAMERA (LANDSCAPE CROP 4:3 & PIXEL FILTER)
+// 3. KAMERA PRO (PAKSA 4K, FLASH, SWITCH KAMERA)
 // ==========================================
 btnConfirmFrame.addEventListener('click', () => {
     sectionFrame.classList.remove('active');
@@ -111,13 +118,56 @@ btnConfirmFrame.addEventListener('click', () => {
 });
 
 async function startCamera() {
+    // Matikan kamera sebelumnya jika sedang menyala (Penting untuk switch lensa)
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+
     try {
-        const constraints = { video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false };
+        // TUNTUTAN RESOLUSI TINGGI (Paksa browser pakai resolusi 4K / maksimal yang HP punya)
+        const constraints = { 
+            video: { 
+                facingMode: currentFacingMode, 
+                width: { ideal: 3840 }, 
+                height: { ideal: 2160 } 
+            }, 
+            audio: false 
+        };
+        
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraStream.srcObject = videoStream;
-        cameraStream.onloadedmetadata = () => cameraStream.play();
-    } catch (error) { alert("Tolong izinkan akses kamera biar bisa berfoto ria."); }
+        
+        cameraStream.onloadedmetadata = () => {
+            cameraStream.play();
+            // Efek Cermin (Mirror) HANYA untuk kamera depan
+            if (currentFacingMode === 'user') {
+                cameraStream.style.transform = 'scaleX(-1)';
+            } else {
+                cameraStream.style.transform = 'scaleX(1)';
+            }
+        };
+    } catch (error) { 
+        alert("Tolong izinkan akses kamera biar bisa berfoto ria."); 
+    }
 }
+
+// LOGIKA SWITCH KAMERA (Tombol Putar)
+btnSwitchCamera.addEventListener('click', () => {
+    currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+    startCamera();
+});
+
+// LOGIKA FLASH (Layar Putih Terang)
+btnToggleFlash.addEventListener('click', () => {
+    isFlashActive = !isFlashActive;
+    if (isFlashActive) {
+        btnToggleFlash.classList.add('active');
+        btnToggleFlash.innerText = '💡 Flash: ON';
+    } else {
+        btnToggleFlash.classList.remove('active');
+        btnToggleFlash.innerText = '💡 Flash: OFF';
+    }
+});
 
 timerBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -164,16 +214,39 @@ function renderThumbnails() {
     }
 }
 
+// Eksekutor Penembakan Kilat Flash & Kamera
+function triggerCapture() {
+    if (isFlashActive) {
+        // Nyalakan Layar Putih 100%
+        flashOverlay.style.display = 'block';
+        void flashOverlay.offsetWidth; // Paksa peramban memproses render CSS seketika
+        flashOverlay.style.opacity = '1';
+        
+        // Beri jeda 150 milidetik agar cahaya menerangi wajah, lalu jepret
+        setTimeout(() => {
+            executeCapture();
+            // Matikan kilat pelan-pelan (Fade out)
+            flashOverlay.style.opacity = '0';
+            setTimeout(() => { flashOverlay.style.display = 'none'; }, 200);
+        }, 150);
+    } else {
+        // Jika Flash OFF, jepret langsung
+        executeCapture();
+    }
+}
+
+// Pemotong Kualitas HD
 function executeCapture() {
     const tempCanvas = document.createElement('canvas');
-    const targetW = 1280;
-    const targetH = 960; 
+    // Set Target Kanvas Sangat Tinggi (Minimal 1920x1440 HD) agar tidak burik
+    const targetW = 1920;
+    const targetH = 1440; 
     tempCanvas.width = targetW;
     tempCanvas.height = targetH;
     const ctx = tempCanvas.getContext('2d');
 
-    const vW = cameraStream.videoWidth || 1280;
-    const vH = cameraStream.videoHeight || 960;
+    const vW = cameraStream.videoWidth || 1920;
+    const vH = cameraStream.videoHeight || 1440;
 
     let srcW, srcH, srcX, srcY;
     const targetRatio = targetW / targetH; 
@@ -192,13 +265,22 @@ function executeCapture() {
     }
 
     ctx.save();
-    ctx.translate(targetW, 0);
-    ctx.scale(-1, 1); 
+    // Efek Cermin saat dijepret HANYA jika pakai kamera depan
+    if (currentFacingMode === 'user') {
+        ctx.translate(targetW, 0);
+        ctx.scale(-1, 1); 
+    }
+    
+    // Matikan blur saat penskalaan agar gambar setajam aslinya
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
     ctx.drawImage(cameraStream, srcX, srcY, srcW, srcH, 0, 0, targetW, targetH);
     ctx.restore();
 
     applyPixelFilter(ctx, targetW, targetH, selectedFilter);
-    capturedPhotos.push(tempCanvas.toDataURL('image/jpeg', 0.85));
+    // Simpan di memori sementara dengan Kualitas 95%
+    capturedPhotos.push(tempCanvas.toDataURL('image/jpeg', 0.95));
     renderThumbnails();
 }
 
@@ -266,13 +348,16 @@ btnCapture.addEventListener('click', () => {
             } else {
                 clearInterval(interval);
                 countdownOverlay.style.display = 'none';
-                executeCapture();
+                
+                // MENGGUNAKAN TRIGGER BARU AGAR BISA ADA KILAT CAHAYA (FLASH)
+                triggerCapture();
+                
                 isCountingDown = false;
                 btnCapture.disabled = false;
             }
         }, 1000);
     } else {
-        executeCapture();
+        triggerCapture();
     }
 });
 
@@ -432,16 +517,20 @@ btnBackToCamera.addEventListener('click', () => {
 });
 
 // ==========================================
-// 5. RENDER FOTO (HD & DIET KOMPRESI)
+// 5. RENDER FOTO (REVOLUSI RESOLUSI HD 90%)
 // ==========================================
 btnConfirmAdjust.addEventListener('click', async () => {
     const originalText = btnConfirmAdjust.innerText;
-    btnConfirmAdjust.innerText = "Membungkus Foto...";
+    btnConfirmAdjust.innerText = "Membungkus Foto HD...";
     btnConfirmAdjust.disabled = true;
     
     const ctx = photoCanvas.getContext('2d');
     photoCanvas.width = finalCanvasWidth;
     photoCanvas.height = finalCanvasHeight; 
+    
+    // Matikan pixelation agar hasil potong super halus
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     
     const workspaceW = parseFloat(adjustWorkspace.style.width);
     const scaleRatio = photoCanvas.width / workspaceW;
@@ -480,13 +569,15 @@ btnConfirmAdjust.addEventListener('click', async () => {
         ctx.drawImage(frameImg, 0, 0, photoCanvas.width, photoCanvas.height);
     }
 
-    // Resolusi HD (Untuk di-download langsung oleh tamu, kualitas 90%)
-    guestData.photoBase64 = photoCanvas.toDataURL('image/jpeg', 0.9);
+    // Resolusi Maksimal untuk HP Tamu Lokal (Kualitas 100%)
+    guestData.photoBase64 = photoCanvas.toDataURL('image/jpeg', 1.0);
     
-    // Resolusi Diet Khusus Upload (Hemat bandwidth, kualitas 40% agar loading QR sangat cepat)
-    const uploadBase64 = photoCanvas.toDataURL('image/jpeg', 0.4); 
+    // ==============================================
+    // PERUBAHAN KRUSIAL: UPLOAD QUALITY NAIK KE 90%
+    // ==============================================
+    // Sekarang, yang dikirim ke QR Code bukan lagi 40% (burik), melainkan 90% (HD).
+    const uploadBase64 = photoCanvas.toDataURL('image/jpeg', 0.9); 
     
-    // BYPASS: LEMPAR LANGSUNG KE LAYAR DOWNLOAD TANPA UPLOAD!
     finalResult.src = guestData.photoBase64; 
     btnDownload.href = guestData.photoBase64;
     
@@ -496,13 +587,12 @@ btnConfirmAdjust.addEventListener('click', async () => {
     sectionAdjust.classList.remove('active');
     sectionDone.classList.add('active'); 
     
-    // Panggil GIF Generator & Eksekusi Upload ke ImgBB di latar belakang
     generateGIF();
     generateQRCode(uploadBase64);
 });
 
 // ==========================================
-// 6. GENERATOR QR CODE (Dilengkapi Deteksi Error Asli)
+// 6. GENERATOR QR CODE (Deteksi Error + Base64 Armor)
 // ==========================================
 async function generateQRCode(compressedBase64) {
     qrLoading.style.display = 'block';
@@ -523,10 +613,12 @@ async function generateQRCode(compressedBase64) {
         const result = await response.json();
 
         if (result.success) {
+            // Ambil URL mentah dan pasang Armor Enkripsi
             const imgUrl = result.data.display_url; 
             const safeBase64Data = btoa(imgUrl);
             const viewerUrl = `${BASE_WEB_URL}view.html?data=${safeBase64Data}`; 
             
+            // Cetak QR Code
             const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(viewerUrl)}`;
             qrCodeImg.src = qrApiUrl;
             
@@ -536,13 +628,11 @@ async function generateQRCode(compressedBase64) {
                 qrHelperText.style.display = 'block';
             };
         } else {
-            // Tangkap pesan error spesifik dari ImgBB
-            throw new Error(result.error?.message || "ImgBB menolak unggahan (Kemungkinan Kunci API salah/limit).");
+            throw new Error(result.error?.message || "ImgBB menolak unggahan (Limit API/Server Penuh).");
         }
     } catch (error) {
         console.error("QR Code Error Detail:", error);
-        // Tampilkan pesan error ASLI di layar agar kita tahu persis kendalanya
-        qrLoading.innerHTML = `⚠️ Gagal Membuat QR:<br><span style="font-size: 0.75rem; color: #ff5555; word-break: break-all;">${error.message}</span><br><br>Silakan gunakan tombol Download langsung.`;
+        qrLoading.innerHTML = `⚠️ Gagal Membuat QR:<br><span style="font-size: 0.75rem; color: #ff5555; word-break: break-all;">${error.message}</span><br><br>Silakan tekan tombol Download Langsung.`;
     }
 }
 
