@@ -6,10 +6,57 @@
     <title>CHORUM Photobooth</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/guest.css">
+    <style>
+        /* CSS Khusus Fitur Baru (Langsung jalan tanpa edit file CSS eksternal) */
+        .flash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: white;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none; /* Agar tidak menghalangi sentuhan layar */
+            transition: opacity 0.1s ease-out;
+            display: none;
+        }
+        .camera-tools {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-camera-tool {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+        .btn-camera-tool.active {
+            background: var(--accent-color, #ccff00);
+            color: #000;
+            border-color: var(--accent-color, #ccff00);
+            box-shadow: 0 0 10px rgba(204, 255, 0, 0.4);
+        }
+    </style>
 </head>
 <body>
+    
+    <!-- ELEMEN LAYAR SOFTBOX (FLASH) -->
+    <div id="flashOverlay" class="flash-overlay"></div>
+
     <div class="app-container">
         
+        <!-- SECTION: FRAME -->
         <section id="step-frame" class="step-section active">
             <div class="header text-center adjust-header" style="margin-top: 20px;">
                 <h2 style="color: var(--accent-color);">Pilih Frame</h2>
@@ -28,12 +75,20 @@
             <button class="btn-primary" id="btnConfirmFrame" style="margin-top: auto; margin-bottom: 20px;">Gunakan Frame Ini</button>
         </section>
 
+        <!-- SECTION: CAMERA -->
         <section id="step-camera" class="step-section">
             <div class="header text-center adjust-header" style="margin-top: 10px; margin-bottom: 10px;">
                 <h2>Waktunya Aksi</h2>
                 <p id="captureHelperText">Pose terbaikmu! (0/3)</p>
             </div>
 
+            <!-- ALAT TAMBAHAN: PUTAR KAMERA & FLASH -->
+            <div class="camera-tools">
+                <button class="btn-camera-tool" id="btnSwitchCamera">🔄 Putar Lensa</button>
+                <button class="btn-camera-tool" id="btnToggleFlash">💡 Flash: OFF</button>
+            </div>
+
+            <!-- TIMER -->
             <div class="timer-controls glass-panel">
                 <button class="timer-btn active" data-time="0">⚡ Off</button>
                 <button class="timer-btn" data-time="3">3s</button>
@@ -69,6 +124,7 @@
             <canvas id="photoCanvas" style="display: none;"></canvas>
         </section>
 
+        <!-- SECTION: ADJUST -->
         <section id="step-adjust" class="step-section">
             <div class="header text-center adjust-header">
                 <h2 style="color: var(--accent-color);">Sesuaikan Posisi</h2>
@@ -95,12 +151,14 @@
             </div>
         </section>
 
+        <!-- SECTION: DONE -->
         <section id="step-done" class="step-section">
             <div class="header text-center" style="margin-top: 20px;">
                 <h2 style="color: var(--accent-color);">Bungkus Lek!</h2>
                 <p>Pilih tipe unduhan lo di bawah.</p>
             </div>
             
+            <!-- BRANDING & SUPPORT -->
             <div class="glass-panel" style="padding: 18px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-color); background: rgba(204, 255, 0, 0.05);">
                 <h3 style="color: var(--text-primary); margin-bottom: 5px; font-family: var(--font-heading); font-size: 1.2rem;">SUPPORT CHORUM! 🚀</h3>
                 <p style="font-size: 0.85rem; margin-bottom: 15px; color: var(--text-secondary);">Pamerin hasil fotomu ke IG Story dan jangan lupa tag kita ya!</p>
@@ -117,7 +175,7 @@
 
             <div class="tab-content active" id="tab-photo">
                 <img id="finalResult" src="" alt="Final" class="final-image glass-panel" style="padding: 5px;">
-                <a id="btnDownload" class="btn-primary" download="CHORUM_Photobooth.jpg" style="text-align:center; text-decoration:none; display:block; width:100%;">Download Foto</a>
+                <a id="btnDownload" class="btn-primary" download="CHORUM_Photobooth.jpg" style="text-align:center; text-decoration:none; display:block; width:100%;">Download Foto HD</a>
             </div>
 
             <div class="tab-content" id="tab-gif">
@@ -130,7 +188,7 @@
 
             <div class="tab-content" id="tab-qr">
                 <div id="qrLoading" style="text-align:center; padding:20px; color: var(--accent-color); font-weight: bold;">
-                    <div class="spinner"></div><br>Menyiapkan Barcode (Bisa butuh beberapa detik)...
+                    <div class="spinner"></div><br>Mengunggah Gambar Resolusi Tinggi... (Mohon tunggu 3-5 detik)
                 </div>
                 <div class="qr-container glass-panel" id="qrContainer" style="display: none; padding: 15px; margin-bottom: 15px;">
                     <img id="qrCode" src="" alt="QR Code" style="width: 200px; height: 200px; display: block; margin: 0 auto; background: white; padding: 10px; border-radius: 8px;">
@@ -143,8 +201,9 @@
 
     </div>
 
+    <!-- SCRIPT INCLUDES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/guest.js?v=2.0"></script>
+    <script src="js/guest.js?v=3.0"></script>
 </body>
 </html>
