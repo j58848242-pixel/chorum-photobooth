@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CHORUM Photobooth - Memori Lo!</title>
-    
     <link rel="stylesheet" href="css/style.css">
-    
     <style>
         body {
-            background-color: #9f070c;
+            background-color: #0a0a0a;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -107,12 +105,12 @@
 <body>
 
     <div class="viewer-container">
-        <!-- Header & Branding -->
         <div class="brand-header">
             <img src="assets/images/logo-chorum.png" alt="CHORUM Logo" onerror="this.style.display='none'">
+            <h1>CHORUM</h1>
+            <p style="font-size: 0.8rem; color: #888; margin-top: 2px;">Solo Market Fest Exclusive</p>
         </div>
 
-        <!-- Bingkai Penampil Foto -->
         <div class="photo-frame" id="photoFrame">
             <div class="loading-state" id="loadingState">
                 <div class="spinner"></div>
@@ -121,12 +119,10 @@
             <img id="guestPhoto" src="" alt="Hasil Photobooth CHORUM">
         </div>
 
-        <!-- Instruksi -->
         <p style="font-size: 0.85rem; color: #aaa; margin: 0;">
             📸 <b>Tekan dan tahan</b> gambar di atas untuk menyimpan (Save Image) ke HP lu.
         </p>
 
-        <!-- Tombol Aksi -->
         <a href="https://www.instagram.com/chorummm?igsi=MTlhZHczcW45N3Q5Yw==" target="_blank" class="btn-action btn-ig">
             Follow & Tag @chorummm 🚀
         </a>
@@ -137,20 +133,19 @@
     </div>
 
     <script>
-        // Mesin Penarik & Dekoder URL Cerdas (Base64)
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const encodedData = urlParams.get('data'); 
+            const rawData = urlParams.get('data'); 
             
             const guestPhoto = document.getElementById('guestPhoto');
             const loadingState = document.getElementById('loadingState');
 
-            if (encodedData) {
+            if (rawData) {
                 try {
-                    // DEKRIPSI BASE64 mengembalikan string URL asli
-                    const photoUrl = atob(encodedData);
+                    // PENGAMAN GANDA: Mengembalikan tanda '+' yang sering diubah jadi spasi oleh scanner HP
+                    const safeEncodedData = rawData.replace(/ /g, '+');
+                    const photoUrl = atob(safeEncodedData);
                     
-                    // Proses pemuatan gambar
                     guestPhoto.src = photoUrl;
                     guestPhoto.onload = () => {
                         loadingState.style.display = 'none';
