@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/guest.css">
     <style>
+        /* 1. ANTI-EYE FATIGUE SYSTEM */
+        body {
+            background-color: #0b0b0e !important; /* Hitam yang lebih teduh */
+            color: #eaeaea !important; /* Putih tulang agar tidak silau */
+        }
+
         .flash-overlay {
             position: fixed;
             top: 0;
@@ -46,6 +52,33 @@
             border-color: var(--accent-color, #ccff00);
             box-shadow: 0 0 10px rgba(204, 255, 0, 0.4);
         }
+
+        /* 2. KOTAK BERSINAR PADA THUMBNAIL (ACTIVE BOUNDING BOX) */
+        #adjustThumbnails .thumbnail-item {
+            transition: all 0.3s ease;
+            opacity: 0.5; /* Redup saat tidak dipilih */
+            border: 2px solid transparent;
+            border-radius: 8px;
+        }
+        #adjustThumbnails .thumbnail-item.active-edit {
+            opacity: 1; /* Terang penuh saat dipilih */
+            border: 2px solid var(--accent-color, #ccff00);
+            box-shadow: 0 0 15px rgba(204, 255, 0, 0.5);
+            transform: scale(1.05); /* Sedikit membesar memberi kesan aktif */
+            z-index: 2;
+        }
+
+        /* 3. LEGAL FOOTER STYLING */
+        .legal-footer {
+            text-align: center;
+            font-family: monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.3);
+            padding: 20px 0 10px 0;
+            margin-top: auto;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -57,7 +90,7 @@
         <section id="step-frame" class="step-section active">
             <div class="header text-center adjust-header" style="margin-top: 20px;">
                 <h2 style="color: var(--accent-color);">Pilih Frame</h2>
-                <p>Pilih desain CHORUM favorit lu!</p>
+                <p>Pilih desain CHORUM favorit lu! ✨</p>
             </div>
             
             <div class="frame-carousel">
@@ -75,7 +108,7 @@
         <section id="step-camera" class="step-section">
             <div class="header text-center adjust-header" style="margin-top: 10px; margin-bottom: 10px;">
                 <h2>Waktunya Aksi</h2>
-                <p id="captureHelperText">Pose terbaikmu! (0/3)</p>
+                <p id="captureHelperText">Pose 1: Senyum Manis! 😊 (0/3)</p>
             </div>
 
             <div class="camera-tools">
@@ -121,7 +154,7 @@
         <section id="step-adjust" class="step-section">
             <div class="header text-center adjust-header">
                 <h2 style="color: var(--accent-color);">Sesuaikan Posisi</h2>
-                <p>Gunakan 2 jari: Geser, cubit (zoom), & putar.</p>
+                <p>Sesuaikan gaya fotomu! 🎨<br><span style="font-size: 0.85rem; color: #888;">Pilih foto di bawah, lalu geser, cubit (zoom), & putar.</span></p>
             </div>
             
             <div class="adjust-workspace-container">
@@ -146,8 +179,8 @@
 
         <section id="step-done" class="step-section">
             <div class="header text-center" style="margin-top: 20px;">
-                <h2 style="color: var(--accent-color);">Bungkus Lek!</h2>
-                <p>Pilih tipe unduhan lo di bawah.</p>
+                <h2 style="color: var(--accent-color);">Bungkus Lek! 🎉</h2>
+                <p>Fotomu siap dipamerin. Pilih format unduhan di bawah!</p>
             </div>
             
             <div class="glass-panel" style="padding: 18px; margin-bottom: 20px; text-align: center; border: 1px solid var(--accent-color); background: rgba(204, 255, 0, 0.05);">
@@ -190,10 +223,12 @@
             <button class="btn-secondary" onclick="window.location.href='index.html'" style="margin-top: auto; margin-bottom: 20px;">Selesai & Kembali</button>
         </section>
 
+        <div class="legal-footer"> © 2026 CHORUM</div>
+
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/guest.js?v=4.0"></script>
+    <script src="js/guest.js?v=6.0"></script>
 </body>
 </html>
