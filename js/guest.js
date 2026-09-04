@@ -2,7 +2,6 @@
 // 1. INISIALISASI DOM & HAPTIC ENGINE
 // ==========================================
 const btnConfirmFrame = document.getElementById('btnConfirmFrame');
-
 const sectionFrame = document.getElementById('step-frame');
 const sectionCamera = document.getElementById('step-camera');
 const sectionAdjust = document.getElementById('step-adjust');
@@ -36,13 +35,12 @@ const btnBackToCamera = document.getElementById('btnBackToCamera');
 const photoCanvas = document.getElementById('photoCanvas');
 const finalResult = document.getElementById('finalResult');
 const btnDownload = document.getElementById('btnDownload');
-
 const qrLoading = document.getElementById('qrLoading');
 const qrContainer = document.getElementById('qrContainer');
 const qrCodeImg = document.getElementById('qrCode');
 const qrHelperText = document.getElementById('qrHelperText');
 
-// --- HAPTIC ENGINE (GETARAN FISIK) ---
+// --- HAPTIC ENGINE (GETARAN FISIK ANDROID) ---
 const Haptic = {
     tap: () => { if (navigator.vibrate) navigator.vibrate(15); },
     tick: () => { if (navigator.vibrate) navigator.vibrate(25); },
@@ -72,11 +70,6 @@ let isFlashActive = false;
 // Kumpulan Microcopy Dinamis
 const posePrompts = ["Senyum Manis! 😊", "Gaya Bebas! ✌️", "Slay Terus! 🔥", "Muka Jelek! 🤪", "Finger Heart! 🫰"];
 
-// Tambahkan haptic di semua tombol secara umum
-document.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', Haptic.tap);
-});
-
 // ==========================================
 // 2. KONEKSI: MUAT FRAME JSON
 // ==========================================
@@ -84,6 +77,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     btnConfirmFrame.innerText = "Memuat Frame...";
     btnConfirmFrame.disabled = true;
     
+    // Pasang Haptic ke semua tombol interaktif
+    document.querySelectorAll('button, .tab-btn').forEach(btn => {
+        btn.addEventListener('mousedown', Haptic.tap);
+        btn.addEventListener('touchstart', Haptic.tap, {passive: true});
+    });
+
     try {
         const res = await fetch(FRAMES_JSON_URL + '?t=' + new Date().getTime()); 
         const result = await res.json();
@@ -99,9 +98,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             btnConfirmFrame.innerText = "Gunakan Frame Ini";
             btnConfirmFrame.disabled = false;
             updateFrameUI();
-        } else {
-            alert("Belum ada frame yang diatur di JSON.");
-            frameNameDisplay.innerText = "Tidak Ada Frame";
         }
     } catch(error) { 
         alert("Gagal memuat frame. Cek koneksi internet."); 
@@ -135,31 +131,18 @@ async function startCamera() {
     if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
     }
-
     try {
         const constraints = { 
-            video: { 
-                facingMode: currentFacingMode, 
-                width: { ideal: 3840 }, 
-                height: { ideal: 2160 } 
-            }, 
+            video: { facingMode: currentFacingMode, width: { ideal: 3840 }, height: { ideal: 2160 } }, 
             audio: false 
         };
-        
         videoStream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraStream.srcObject = videoStream;
-        
         cameraStream.onloadedmetadata = () => {
             cameraStream.play();
-            if (currentFacingMode === 'user') {
-                cameraStream.style.transform = 'scaleX(-1)';
-            } else {
-                cameraStream.style.transform = 'scaleX(1)';
-            }
+            cameraStream.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
         };
-    } catch (error) { 
-        alert("Tolong izinkan akses kamera biar bisa berfoto ria."); 
-    }
+    } catch (error) { alert("Tolong izinkan akses kamera biar bisa berfoto ria."); }
 }
 
 btnSwitchCamera.addEventListener('click', () => {
@@ -211,13 +194,11 @@ function renderThumbnails() {
             capturedPhotos.splice(index, 1); 
             renderThumbnails(); 
         };
-        
         div.appendChild(img);
         div.appendChild(btnDel);
         thumbnailContainer.appendChild(div);
     });
 
-    // MICROCOPY DINAMIS BERDASARKAN URUTAN FOTO
     let nextPoseIndex = capturedPhotos.length;
     let prompt = posePrompts[nextPoseIndex % posePrompts.length];
     
@@ -232,7 +213,6 @@ function renderThumbnails() {
     }
 }
 
-// MESIN DUAL FLASH (Hardware + Software)
 async function triggerCapture() {
     if (isFlashActive) {
         const track = videoStream ? videoStream.getVideoTracks()[0] : null;
@@ -242,22 +222,16 @@ async function triggerCapture() {
             try {
                 await track.applyConstraints({ advanced: [{ torch: true }] });
                 torchSuccess = true;
-                
                 setTimeout(() => {
                     executeCapture();
                     track.applyConstraints({ advanced: [{ torch: false }] }).catch(e => {});
                 }, 250);
-            } catch (error) {
-                console.log("Hardware Flash tidak didukung, beralih ke Screen Flash.");
-                torchSuccess = false;
-            }
+            } catch (error) { torchSuccess = false; }
         }
-
         if (!torchSuccess) {
             flashOverlay.style.display = 'block';
             void flashOverlay.offsetWidth; 
             flashOverlay.style.opacity = '1';
-            
             setTimeout(() => {
                 executeCapture();
                 flashOverlay.style.opacity = '0';
@@ -271,18 +245,16 @@ async function triggerCapture() {
 
 btnCapture.addEventListener('click', () => {
     if (capturedPhotos.length >= currentSlots || isCountingDown) return;
-    
     if (selectedTimer > 0) {
         isCountingDown = true;
         btnCapture.disabled = true;
         let timeLeft = selectedTimer;
-        
         countdownOverlay.style.display = 'flex';
         countdownOverlay.innerText = timeLeft;
         countdownOverlay.classList.remove('pop-anim');
         void countdownOverlay.offsetWidth; 
         countdownOverlay.classList.add('pop-anim');
-        Haptic.tick(); // Haptic detik pertama
+        Haptic.tick(); 
 
         const interval = setInterval(() => {
             timeLeft--;
@@ -291,13 +263,11 @@ btnCapture.addEventListener('click', () => {
                 countdownOverlay.classList.remove('pop-anim');
                 void countdownOverlay.offsetWidth;
                 countdownOverlay.classList.add('pop-anim');
-                Haptic.tick(); // Haptic detak timer
+                Haptic.tick(); 
             } else {
                 clearInterval(interval);
                 countdownOverlay.style.display = 'none';
-                
                 triggerCapture();
-                
                 isCountingDown = false;
                 btnCapture.disabled = false;
             }
@@ -308,46 +278,30 @@ btnCapture.addEventListener('click', () => {
 });
 
 function executeCapture() {
-    Haptic.shutter(); // Getaran fisik rana DSLR
-
+    Haptic.shutter(); 
     const tempCanvas = document.createElement('canvas');
     const targetW = 1920;
     const targetH = 1440; 
     tempCanvas.width = targetW;
     tempCanvas.height = targetH;
     const ctx = tempCanvas.getContext('2d');
-
     const vW = cameraStream.videoWidth || 1920;
     const vH = cameraStream.videoHeight || 1440;
-
     let srcW, srcH, srcX, srcY;
     const targetRatio = targetW / targetH; 
     const streamRatio = vW / vH;
 
     if (streamRatio > targetRatio) {
-        srcH = vH;
-        srcW = vH * targetRatio;
-        srcX = (vW - srcW) / 2;
-        srcY = 0;
+        srcH = vH; srcW = vH * targetRatio; srcX = (vW - srcW) / 2; srcY = 0;
     } else {
-        srcW = vW;
-        srcH = vW / targetRatio;
-        srcX = 0;
-        srcY = (vH - srcH) / 2;
+        srcW = vW; srcH = vW / targetRatio; srcX = 0; srcY = (vH - srcH) / 2;
     }
 
     ctx.save();
-    if (currentFacingMode === 'user') {
-        ctx.translate(targetW, 0);
-        ctx.scale(-1, 1); 
-    }
-    
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    
+    if (currentFacingMode === 'user') { ctx.translate(targetW, 0); ctx.scale(-1, 1); }
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(cameraStream, srcX, srcY, srcW, srcH, 0, 0, targetW, targetH);
     ctx.restore();
-
     applyPixelFilter(ctx, targetW, targetH, selectedFilter);
     capturedPhotos.push(tempCanvas.toDataURL('image/jpeg', 0.95));
     renderThumbnails();
@@ -361,40 +315,29 @@ function applyPixelFilter(ctx, width, height, filterType) {
         let r = d[i], g = d[i + 1], b = d[i + 2];
         if (filterType.includes('grayscale(100%)') && filterType.includes('contrast(150%)')) {
             let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-            gray = ((gray - 128) * 1.5) + 128;
-            gray = Math.min(255, Math.max(0, gray * 0.85));
-            d[i] = d[i + 1] = d[i + 2] = gray;
+            gray = ((gray - 128) * 1.5) + 128; d[i] = d[i + 1] = d[i + 2] = Math.min(255, Math.max(0, gray * 0.85));
         } else if (filterType.includes('grayscale(100%)')) {
-            let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-            d[i] = d[i + 1] = d[i + 2] = gray;
+            d[i] = d[i + 1] = d[i + 2] = 0.299 * r + 0.587 * g + 0.114 * b;
         } else if (filterType.includes('sepia(100%)')) {
-            d[i]     = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+            d[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
             d[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
             d[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
         } else if (filterType.includes('sepia(40%)')) {
-            let sr = (r * 0.393) + (g * 0.769) + (b * 0.189);
-            let sg = (r * 0.349) + (g * 0.686) + (b * 0.168);
-            let sb = (r * 0.272) + (g * 0.534) + (b * 0.131);
+            let sr = (r * 0.393) + (g * 0.769) + (b * 0.189); let sg = (r * 0.349) + (g * 0.686) + (b * 0.168); let sb = (r * 0.272) + (g * 0.534) + (b * 0.131);
             r = r * 0.6 + sr * 0.4; g = g * 0.6 + sg * 0.4; b = b * 0.6 + sb * 0.4;
-            d[i]     = Math.min(255, Math.max(0, ((r - 128) * 1.2) + 128));
-            d[i + 1] = Math.min(255, Math.max(0, ((g - 128) * 1.2) + 128));
-            d[i + 2] = Math.min(255, Math.max(0, ((b - 128) * 1.2) + 128));
+            d[i] = Math.min(255, Math.max(0, ((r - 128) * 1.2) + 128)); d[i + 1] = Math.min(255, Math.max(0, ((g - 128) * 1.2) + 128)); d[i + 2] = Math.min(255, Math.max(0, ((b - 128) * 1.2) + 128));
         } else if (filterType.includes('brightness(110%)')) {
-            d[i]     = Math.min(255, r * 1.1);
-            d[i + 1] = Math.min(255, g * 1.1);
-            d[i + 2] = Math.min(255, b * 1.1);
+            d[i] = Math.min(255, r * 1.1); d[i + 1] = Math.min(255, g * 1.1); d[i + 2] = Math.min(255, b * 1.1);
         } else if (filterType.includes('saturate(150%)')) {
             let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-            d[i]     = Math.min(255, Math.max(0, gray + (r - gray) * 1.5));
-            d[i + 1] = Math.min(255, Math.max(0, gray + (g - gray) * 1.5));
-            d[i + 2] = Math.min(255, Math.max(0, gray + (b - gray) * 1.5));
+            d[i] = Math.min(255, Math.max(0, gray + (r - gray) * 1.5)); d[i + 1] = Math.min(255, Math.max(0, gray + (g - gray) * 1.5)); d[i + 2] = Math.min(255, Math.max(0, gray + (b - gray) * 1.5));
         }
     }
     ctx.putImageData(imgData, 0, 0);
 }
 
 // ==========================================
-// 4. SESUAIKAN FOTO (PRO PORTRAIT WORKSPACE)
+// 4. EDITOR PRO (DIRECT TOUCH & SPOTLIGHT)
 // ==========================================
 let photoTransforms = [];
 let activeEditIndex = 0;
@@ -430,7 +373,6 @@ btnFinishCapture.addEventListener('click', async () => {
 
     adjustWorkspace.style.width = `${workspaceW}px`;
     adjustWorkspace.style.height = `${workspaceH}px`;
-    
     adjustFrameOverlay.src = guestData.selectedFrame;
     adjustPhotoLayers.innerHTML = '';
     adjustThumbnails.innerHTML = '';
@@ -439,6 +381,7 @@ btnFinishCapture.addEventListener('click', async () => {
     photoTransforms = []; 
 
     capturedPhotos.forEach((photoUrl, index) => {
+        // Taktik 2: Elemen bisa diklik langsung di kanvas atas
         const slotDiv = document.createElement('div');
         slotDiv.style.position = 'absolute';
         slotDiv.style.top = `${index * slotHeight}px`;
@@ -446,6 +389,10 @@ btnFinishCapture.addEventListener('click', async () => {
         slotDiv.style.width = '100%';
         slotDiv.style.height = `${slotHeight}px`;
         slotDiv.style.overflow = 'hidden';
+        
+        // Sensor sentuh untuk memilih foto langsung dari layar utama
+        slotDiv.addEventListener('mousedown', () => { Haptic.tap(); setActiveEdit(index); });
+        slotDiv.addEventListener('touchstart', () => { Haptic.tap(); setActiveEdit(index); }, {passive: true});
 
         photoTransforms.push({ x: 0, y: 0, scale: 1, rotation: 0, flipH: 1, flipV: 1 });
 
@@ -459,33 +406,33 @@ btnFinishCapture.addEventListener('click', async () => {
         img.style.width = '100%'; 
         img.style.height = 'auto'; 
         img.style.transform = `translate(calc(-50% + 0px), calc(-50% + 0px)) rotate(0deg) scale(1, 1)`;
+        // Taktik 1: Animasi transisi Spotlight (Lampu Sorot)
+        img.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
         
         slotDiv.appendChild(img);
         adjustPhotoLayers.appendChild(slotDiv);
 
         const thumb = document.createElement('div');
-        // KELAS ACTIVE-EDIT CSS DIAPLIKASIKAN DI SINI
         thumb.className = `thumbnail-item ${index === 0 ? 'active-edit' : ''}`;
         thumb.innerHTML = `<img src="${photoUrl}">`;
-        thumb.onclick = () => { 
-            Haptic.tap();
-            setActiveEdit(index); 
-        };
+        thumb.onclick = () => { Haptic.tap(); setActiveEdit(index); };
         adjustThumbnails.appendChild(thumb);
     });
     setActiveEdit(0); 
 });
 
-// LOGIKA PERPINDAHAN KOTAK BERSINAR (ACTIVE BOX)
+// LOGIKA UX: SPOTLIGHT (LAMPU SOROT) & ACTIVE BOX
 function setActiveEdit(index) {
     activeEditIndex = index;
-    // Mengatur redup/terang thumbnail
+    // 1. Kotak Thumbnail Menyala
     document.querySelectorAll('#adjustThumbnails .thumbnail-item').forEach((el, i) => { 
         el.classList.toggle('active-edit', i === index); 
     });
-    // Mengangkat z-index foto yang diedit
-    document.querySelectorAll('.adjust-photo-item').forEach((el, i) => { 
-        el.parentElement.style.zIndex = i === index ? '5' : '1'; 
+    // 2. Spotlight Kanvas Utama (Meredupkan yang tidak diedit)
+    document.querySelectorAll('.adjust-photo-item').forEach((img, i) => { 
+        img.parentElement.style.zIndex = i === index ? '5' : '1'; 
+        img.style.opacity = i === index ? '1' : '0.4'; // Foto lain meredup 40%
+        img.style.filter = i === index ? 'none' : 'grayscale(30%)'; // Foto lain agak pucat
     });
 }
 
@@ -570,9 +517,7 @@ btnConfirmAdjust.addEventListener('click', async () => {
     const ctx = photoCanvas.getContext('2d');
     photoCanvas.width = finalCanvasWidth;
     photoCanvas.height = finalCanvasHeight; 
-    
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     
     const workspaceW = parseFloat(adjustWorkspace.style.width);
     const scaleRatio = photoCanvas.width / workspaceW;
@@ -595,7 +540,6 @@ btnConfirmAdjust.addEventListener('click', async () => {
         ctx.beginPath();
         ctx.rect(0, slotY, photoCanvas.width, slotH);
         ctx.clip(); 
-
         ctx.translate(globalCenterX, globalCenterY);
         ctx.rotate(tr.rotation * Math.PI / 180);
         ctx.scale(tr.scale * tr.flipH, tr.scale * tr.flipV);
@@ -656,7 +600,7 @@ async function generateQRCode(compressedBase64) {
             qrCodeImg.src = qrApiUrl;
             
             qrCodeImg.onload = () => {
-                Haptic.success(); // Haptic berhasil!
+                Haptic.success(); 
                 qrLoading.style.display = 'none';
                 qrContainer.style.display = 'block';
                 qrHelperText.style.display = 'block';
@@ -665,7 +609,7 @@ async function generateQRCode(compressedBase64) {
             throw new Error(result.error?.message || "ImgBB menolak unggahan.");
         }
     } catch (error) {
-        Haptic.error(); // Haptic error
+        Haptic.error(); 
         console.error("QR Code Error Detail:", error);
         qrLoading.innerHTML = `⚠️ Gagal Membuat QR:<br><span style="font-size: 0.75rem; color: #ff5555;">${error.message}</span><br><br>Gunakan tombol Download Langsung.`;
     }
@@ -698,16 +642,11 @@ async function generateGIF() {
             const logoH = logoW * (logoImg.naturalHeight / logoImg.naturalWidth);
             ctx.drawImage(logoImg, canvas.width - logoW - 15, canvas.height - logoH - 15, logoW, logoH);
         }
-
         gifFrames.push(canvas.toDataURL('image/jpeg', 0.7));
     }
 
     gifshot.createGIF({
-        images: gifFrames,
-        gifWidth: canvas.width,
-        gifHeight: canvas.height,
-        interval: 0.5, 
-        numFrames: gifFrames.length
+        images: gifFrames, gifWidth: canvas.width, gifHeight: canvas.height, interval: 0.5, numFrames: gifFrames.length
     }, function (obj) {
         if (!obj.error) {
             const gifUrl = obj.image;
