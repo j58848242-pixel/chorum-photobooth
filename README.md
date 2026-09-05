@@ -1,2 +1,2 @@
-# chorum-photobooth
+# chorumbooth
 chorum-photobooth
