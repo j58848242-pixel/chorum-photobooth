@@ -9,4 +9,4 @@ const IMGBB_API_KEY = "4f4b291ad11076f6eebdd5ef7a96a5a3";
 const FRAMES_JSON_URL = "assets/images/frames/frames.json";
 
 // 3. URL Web Utama Anda (Untuk Rute QR Code)
-const BASE_WEB_URL = "https://j58848242-pixel.github.io/chorum-photobooth/";
+const BASE_WEB_URL = "chorumbooth.dpdns.org";
